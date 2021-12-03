@@ -164,6 +164,8 @@
 
   ![apim-short-view](./Assets/apim-short-view.png)
 
+  
+
   - Install API Management through Azure Portal
 
   - Move APIM into a Subnet (already created in previous exercise)
@@ -173,8 +175,7 @@
     - Using a proper DNS certificate
     - LetsEncrypt Certificates can also be used
 
-  - Modify Application Gateway backend pool to point to this Private IP
-    (Earlier it was pointing to Private IP of Nginx Ingress)
+  - Modify Application Gateway backend pool to point to this Private IP (*Earlier it was pointing to Private IP of Nginx Ingress*)
 
     - Modify Http Settings of Application Gateway to point all traffic to APIM
     - Modify Health Probe accordingly
@@ -195,7 +196,65 @@
 
   - Check Metrics in Azure Portal
 
+  - #### Steps
+
+    - ##### APIM Private IP
     
+      ![apim-overview](./Assets/apim-overview.png)
+    
+      
+    
+    - ##### Products
+    
+      ![apim-smoke](./Assets/apim-products.png)
+    
+      
+    
+    - ##### APIM Check Header Policy
+    
+      ![apim-smoke](./Assets/apim-header-policy.png)
+    
+    - ##### Smoke
+    
+      ![apim-smoke](./Assets/apim-smoke.png)
+    
+      
+    
+      ![apim-smoke-2](./Assets/apim-smoke-2.png)
+    
+      
+    
+      ![apim-smoke-2](./Assets/apim-smoke-3.png)
+    
+      
+    
+    - ##### RatingsWeb
+    
+      ![apim-ratings-web](./Assets/apim-ratings-web.png)
+    
+      
+    
+    - ##### RatingsAPI
+    
+      ![apim-ratings-web](./Assets/apim-ratings-api.png)
+    
+      ![apim-ratings-web](./Assets/apim-ratings-api-2.png)
+    
+      ![apim-ratings-web](./Assets/apim-ratings-api-2.png)
+    
+    - ##### OAuth
+    
+      ![apim-ratings-web](./Assets/apim-oauth.png)
+    
+      
+    
+      ![apim-ratings-web](./Assets/apim-oauth-2.png)
+    
+      ![apim-ratings-web](./Assets/apim-oauth-2.png)
+    
+      ![apim-ratings-web](./Assets/apim-oauth-3.png)
+    
+      ![apim-ratings-web](./Assets/apim-oauth-4.png)
 
 - ### KEDA
 
@@ -233,22 +292,27 @@
   kubectl create ns serverless
   
   #Create a Storage Account in Azure Portal - kedateststg
-  #Create a Blob Container in Azure Portal - kedablob
-  #Create a Queue Container in Azure Portal - kedaqueue
+  #Create a Blob Container in Azure Portal - aciimageblob
+  #Create a Queue Container in Azure Portal - aciimagequeue
   
   #Note down the Connection String of the storage account
   #This would be added as K8s secret inside the AKS cluster
   kubetcl create secret generic keda-stg-secret -n serverless --from-literal=AzureWebJobsStorage="<Blob-Connection-String>"
   
+  ACIBlobApp
   ================================================================================
+  #Clone/Fork/Download Souerce code
+  https://github.com/monojit18/ACIBlobApp.git
   
-  #ACIBlobApp
-  ================================================================================
+  #CD to the director where Dockerfile exists
+  #This docker build but performed in a Cloud Agent(VM) by ACR
+  az acr build -t $acrName.azurecr.io/aciblob-app:v1.0.0 -r $acrName .
+  
   #Deploy ACIBlobApp in serverless namespace
   #App reacts to Blob events
-  helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/AKSWorkshop/values-dev.yaml
+  helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/values.yaml
   
-  #helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/AKSWorkshop/values-dev.yaml
+  #helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-chart/ -f $microservicesFolderPath/Helms/aciblobapp-chart/values.yaml
   #helm uninstall aciblobapp-chart -n serverless
   
   #Check if app is deployed and no. of replicas running
@@ -258,23 +322,30 @@
   
   #Deploy KEDA objects in serverless namespace
   #These objects would ensure that the application scales based on Blob trigger
-  helm install aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/AKSWorkshop/values-dev.yaml
+  helm install aciblobapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/values-keda.yaml
   
-  #helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/AKSWorkshop/values-dev.yaml
-  #helm uninstall aciblobapp-chart -n serverless
+  #helm upgrade aciblobapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciblobapp-keda-chart/ -f $microservicesFolderPath/Helms/aciblobapp-keda-chart/values-keda.yaml
+  #helm uninstall aciblobapp-keda-chart -n serverless
   
   #Keep adding large no. of images into Blob Container
   #Check ACIBlobApp deployment on AKS cluster
   #Watch how replicas are scaling up and down
-  
-  
-  #ACIQueueApp
   ================================================================================
+  
+  ACIQueueApp
+  ================================================================================
+  #Clone/Fork/Download Souerce code
+  https://github.com/monojit18/ACIQueueApp.git
+  
+  #CD to the director where Dockerfile exists
+  #This docker build but performed in a Cloud Agent(VM) by ACR
+  az acr build -t $acrName.azurecr.io/aciqueue-app:v1.0.0 -r $acrName .
+  
   #Deploy ACIQueueApp in serverless namespace
   #App reacts to Blob events
-  helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/AKSWorkshop/values-dev.yaml
+  helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values-dev.yaml
   
-  #helm upgrade aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/AKSWorkshop/values-dev.yaml
+  #helm upgrade aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values-dev.yaml
   #helm uninstall aciqueueapp-chart -n serverless
   
   #Check if app is deployed and no. of replicas running
@@ -284,10 +355,10 @@
   
   #Deploy KEDA objects in serverless namespace
   #These objects would ensure that the application scales based on Blob trigger
-  helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/AKSWorkshop/values-dev.yaml
+  helm install aciqueueapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/values-keda-dev.yaml
   
-  #helm upgrade aciblobapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/AKSWorkshop/values-dev.yaml
-  #helm uninstall aciqueueapp-chart -n serverless
+  #helm upgrade aciqueueapp-keda-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-keda-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-keda-chart/values-keda-dev.yaml
+  #helm uninstall aciqueueapp-keda-chart -n serverless
   
   #Keep adding large no. of messages into Queue Container
   #Check ACIQueueApp deployment on AKS cluster
