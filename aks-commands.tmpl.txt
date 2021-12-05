@@ -399,7 +399,7 @@ helm install ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-cha
 #helm upgrade  ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke.yaml
 #helm uninstall ingress-chart -n aks-train-smoke
 
-#kubectl create secret tls aks-workshop-tls-secret -n aks-train-smoke --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
+#kubectl create secret tls aks-workshop-tls-secret -n aks-train-smoke --cert="" --key=""
 #helm install ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke-tls.yaml
 
 #helm upgrade ingress-chart -n aks-train-smoke $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-smoke-tls.yaml
@@ -489,12 +489,6 @@ helm install  ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-char
 #helm upgrade  ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev.yaml
 #helm uninstall ingress-chart -n aks-train-dev
 
-#kubectl create secret tls aks-workshop-tls-secret -n aks-train-dev --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
-#helm install ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev-tls.yaml
-
-#helm upgrade ingress-chart -n aks-train-dev $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-dev-tls.yaml
-#helm uninstall ingress-chart -n aks-train-dev
-
 #Call Ratings app Url; check end-to-end connectivity
 curl -k https://dev-<appgw-dns-name>/
 
@@ -531,6 +525,12 @@ helm install  ingress-chart -n aks-train-qa $setupFolderPath/Helms/ingress-chart
 #helm upgrade  ingress-chart -n aks-train-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa.yaml
 #helm uninstall ingress-chart -n aks-train-qa
 
+#kubectl create secret tls aks-workshop-tls-secret -n aks-train-qa --cert="" --key=""
+#helm install ingress-chart -n aks-train-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa-tls.yaml
+
+#helm upgrade ingress-chart -n aks-train-qa $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-qa-tls.yaml
+#helm uninstall ingress-chart -n aks-train-qa
+
 #Call Ratings app Url; check end-to-end connectivity
 curl -k https://qa-<appgw-dns-name>/
 
@@ -546,7 +546,7 @@ SSL Options
 #Http Settings for aks-train-appgw-dev-http-settings - is setup over Http (80)
 #Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Http (80)
 
-kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
+kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="" --key=""
 helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
 
 #helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
@@ -1049,9 +1049,9 @@ az acr build -t $acrName.azurecr.io/aciqueue-app:v1.0.0 -r $acrName .
 
 #Deploy ACIQueueApp in serverless namespace
 #App reacts to Blob events
-helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values-dev.yaml
+helm install aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values.yaml
 
-#helm upgrade aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values-dev.yaml
+#helm upgrade aciqueueapp-chart -n serverless $microservicesFolderPath/Helms/aciqueueapp-chart/ -f $microservicesFolderPath/Helms/aciqueueapp-chart/values.yaml
 #helm uninstall aciqueueapp-chart -n serverless
 
 #Check if app is deployed and no. of replicas running
