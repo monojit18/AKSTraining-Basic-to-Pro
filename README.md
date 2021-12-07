@@ -736,8 +736,18 @@
 
       
       
+      ```bash
+      #SSL Offloading at Nginx Ingress Controller
+      #Current implementation QA is already setup for this
+      #PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
+      #Http Settings for aks-train-appgw-qa-http-settings - is setup over Https (443)
+      #Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Https (443)
+      ```
+      
+      
+      
       [ingress-chart/values-qa-tls.yaml](./Deployments/Setup/Helms/ingress-chart/values-qa-tls.yaml)
-
+      
       ```yaml
       ingress:
         name: aks-workshop-ingress
