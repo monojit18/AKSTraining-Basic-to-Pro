@@ -6,6 +6,7 @@
 - [**HOL**](#HOL)
   - **[Local Variables](#Local-Variables)**
   - **[Login to Azure](#Login-to-Azure)**
+  - **[SSL Offload](#SSL-Offload)**
   - **[API Management](#API-Management)**
   - **[KEDA](#KEDA)**
   - **[Azure Policy](#Azure-Policy)**
@@ -26,7 +27,7 @@
 
 ## Pre Requisites
 
-![AKS-Ref-Achitecture-v2.2](./Assets/AKS-Ref-Achitecture-v2.2.png)
+![AKS-Ref-Achitecture-v2.2](./Assets/AKS-Ref-Achitecture-v2.3.png)
 
 - Gone thru the exercises of Basic to Advanced
 
@@ -160,7 +161,7 @@
   #az account set -s $subscriptionId
   ```
 
-- ### SSL Offload at the Application Pod
+- ### SSL Offload
 
   - ###### Configure **Multi-site Listener**
 
@@ -192,11 +193,55 @@
     ![appgw-rules](./Assets/appgw-rules-ssltest-2.png)
 
     ```bash
+    #Create namespace for SSL Test
+    kubectl create ns aks-train-ssltest
+    
+    APIProxyApp
+    ========================================
+    
+    #APIProxyApp - Proxy API App
+    
+    #Clone/Fork/Download Souerce code
+    https://github.com/monojit18/SSLTest.git
+    
+    #CD to the APIProxyApp directory where Dockerfile exists
+    #This docker build but performed in a Cloud Agent(VM) by ACR
+    az acr build -t apiproxyapp:v1.0.0 -r $acrName .
+    
+    #Change <acrName> in the $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+    #Change <agentpool> in the $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+    helm install apiproxy-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apiproxy-chart/ -f $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+    
+    #helm upgrade apiproxy-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apiproxy-chart/ -f $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+    #helm uninstall apiproxy-chart -n aks-train-ssltest
+    
+    APIBackendApp
+    ========================================
+    
+    #APIBackendApp - backend API App
+    
+    #CD to the APIBackendApp directory where Dockerfile exists
+    #This docker build but performed in a Cloud Agent(VM) by ACR
+    az acr build -t apibkendapp:v1.0.0 -r $acrName .
+    
+    #Change <acrName> in the $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+    #Change <agentpool> in the $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+    helm install apibkend-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apibkend-chart/ -f $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+    
+    #helm upgrade apibkend-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apibkend-chart/ -f $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+    #helm uninstall apibkend-chart -n aks-train-ssltest
+    
     #Backend protocol - HTTPS
-    kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
+    kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="$baseFolderPath/Certs/<>.pem" --key="$baseFolderPath/Certs/<>.key"
     helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
     
     #helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
+    #helm uninstall ingress-chart -n aks-train-ssltest
+    
+    #SSL Passthru
+    #helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
+    
+    #helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
     #helm uninstall ingress-chart -n aks-train-ssltest
     ```
 
@@ -345,6 +390,51 @@
       ![apim-ratings-web](./Assets/apim-oauth-3.png)
     
       ![apim-ratings-web](./Assets/apim-oauth-4.png)
+      
+      
+    
+  - #### Configure Application Gateway
+
+    - The **QA Listener** which is already created in prvious steps, can be leveraged there
+    
+      - One can create a separate *Listener* also here
+    
+      ![apim-ratings-web](./Assets/appgw-apim-listeners.png)
+    
+      
+    
+    - **Backend Pool** should be pointing to the *Private IP* of **API Management** instance
+    
+    - **Http Settings** should be either supporting *Http (80)* Or *Https (443)*
+    
+      ![apim-ratings-web](./Assets/appgw-apim-http-settings.png)
+    
+      ![apim-ratings-web](./Assets/appgw-apim-http-settings-2.png)
+    
+      ![apim-ratings-web](./Assets/appgw-apim-http-settings-3.png)
+    
+    - **Rules** to be configurd. Exising *QA Rule* can be modified to point ot APIM
+    
+      - One can create a separate *Rule* also here
+    
+      ![apim-ratings-web](./Assets/appgw-apim-qa-rule.png)
+    
+      ![apim-ratings-web](./Assets/appgw-apim-qa-rule-2.png)
+    
+    - **Health Probe** to check *APIM* health
+    
+      - A dedicated *Healthz* API to be proviced and added in *APIM*
+      - For this workshop, it would only return *200 OK* and make *App Gateway* happy
+    
+      ![apim-ratings-web](./Assets/appgw-apim-health-probe.png)
+    
+      ![apim-ratings-web](./Assets/appgw-apim-health-probe-2.png)
+    
+      ![apim-ratings-web](./Assets/appgw-apim-health-probe-3.png)
+    
+    
+    
+    
 
 - ### KEDA
 
