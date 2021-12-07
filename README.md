@@ -693,9 +693,9 @@
 
       ![appgw-rules](./Assets/appgw-health-probes.png)
 
-      ![appgw-rules](./Assets/appgw-health-probes-2.png)
+      ![appgw-rules](./Assets/appgw-health-probe-2.png)
 
-      ![appgw-rules](./Assets/appgw-health-probes-3.png)
+      ![appgw-rules](./Assets/appgw-health-probe-3.png)
 
       ![appgw-rules](./Assets/appgw-test-health-probes.png)
 
