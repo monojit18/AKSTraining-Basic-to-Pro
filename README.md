@@ -590,7 +590,7 @@
 
           - **Health Probe**
 
-            - *Monitors* the health pdf Backend Pool
+            - *Monitors* the health of Backend Pool
 
             - Removes *Unhealthy* resources from Pool automatically and Puts them back when they are *healthy*
 
@@ -686,6 +686,18 @@
       
 
       ![appgw-rules](./Assets/appgw-rules-qa-2.png)
+      
+    - ###### Configure **Health Probes**
+
+      - Monitors health of the Backend pool
+
+      ![appgw-rules](./Assets/appgw-health-probes.png)
+
+      ![appgw-rules](./Assets/appgw-health-probes-2.png)
+
+      ![appgw-rules](./Assets/appgw-health-probes-3.png)
+
+      ![appgw-rules](./Assets/appgw-test-health-probes.png)
 
     
 
