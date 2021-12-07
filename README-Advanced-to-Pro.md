@@ -160,6 +160,96 @@
   #az account set -s $subscriptionId
   ```
 
+- ### SSL Offload at the Application Pod
+
+  - ###### Configure **Multi-site Listener**
+
+    - InBound calls can reach to *Application Gateway* and ultimately to the AKS cluster over *Https (443)*
+      - **ssltest** - for connecting the AKS cluster over Https
+
+    ![appgw-listeners](./Assets/appgw-listeners-ssltest.png)
+
+    
+
+  - ###### Configure **Http Settings**
+
+    - Decides how **Application Gateway** connects to the AKS cluster
+    - Backend Hostname header can be overridden to point to AKS
+    - Ingress within AKS clouster would then route traffic to appropriate application services/pods
+
+    ![appgw-http-settings](./Assets/appgw-http-settings-ssltest.png)
+
+    ![appgw-http-settings](./Assets/appgw-http-settings-ssltest-2.png)
+
+    
+
+  - ###### Configure **Rules**
+
+    - Connects ***Listeners***, ***Backend Pools*** and ***Http Settings***
+
+    ![appgw-rules](./Assets/appgw-rules-ssltest.png)
+
+    ![appgw-rules](./Assets/appgw-rules-ssltest-2.png)
+
+    ```bash
+    #Backend protocol - HTTPS
+    kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/star.internal.wkshpdev.com.key"
+    helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
+    
+    #helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
+    #helm uninstall ingress-chart -n aks-train-ssltest
+    ```
+
+    ```yaml
+    ingress:
+      name: aks-workshop-ssltest-ingress
+      namespace: aks-train-ssltest
+      annotations:
+        ingressClass: nginx
+        proxyBodySize: "10m"
+        enableCors: "true"
+        rewriteTarget: /$1
+        #TLS is continued beyond Ingress till the Application POD
+        #TLS is offloaded at the POD
+        backendProtocol: "HTTPS"
+      tls:
+      #TLS is enabled; hence traffic reaches Ingress over Https (443)
+      #TLS is offloaded at Ingress
+      - hosts:
+        - "*.<dns-name>"
+        #K8s secret for holding the TLS Certificate
+        secretName: aks-workshop-tls-secret
+      hosts:
+      #Private DNS Zone name for apiproxy
+      - name: apiproxy.<dns-name>
+        paths:
+        - path: /?(.*)
+          pathType: Prefix
+          service: api-proxy-svc
+          port: 443 
+      #Private DNS Zone name for apibkend
+      - name: apibkend.<dns-name>
+        paths:
+        - path: /?(.*)
+          pathType: Prefix
+          service: api-bkend-svc
+          port: 443    
+    ```
+
+  - ###### Configure **Health Probe**s
+
+    ![appgw-rules](./Assets/appgw-health-probes.png)
+
+    ![appgw-rules](./Assets/appgw-health-probe-ssltest.png)
+
+    ![appgw-rules](./Assets/appgw-health-probe-ssltest-2.png)
+
+    ![appgw-rules](./Assets/appgw-health-probe-ssltest-3.png)
+
+    ![appgw-rules](./Assets/appgw-health-probe-test-ssltest.png)
+
+  
+
 - ### API Management
 
   ![apim-short-view](./Assets/apim-short-view.png)
@@ -214,15 +304,13 @@
     
       ![apim-smoke](./Assets/apim-header-policy.png)
     
+      
+    
     - ##### Smoke
     
       ![apim-smoke](./Assets/apim-smoke.png)
     
-      
-    
       ![apim-smoke-2](./Assets/apim-smoke-2.png)
-    
-      
     
       ![apim-smoke-2](./Assets/apim-smoke-3.png)
     
@@ -241,6 +329,8 @@
       ![apim-ratings-web](./Assets/apim-ratings-api-2.png)
     
       ![apim-ratings-web](./Assets/apim-ratings-api-2.png)
+    
+      
     
     - ##### OAuth
     
@@ -497,17 +587,17 @@
     #Launch Kiali in the browser
     curl -k https://kiali-<appgw-dns-name>/
     ```
-  
+
   - #### Observability
-  
+
     ![service-mirros](./Assets/istio-metrics-graph.png)
-  
+
     
-  
+
     ![service-mirros](./Assets/istio-fault.png)
-  
+
     
-  
+
     ```bash
     #Deploy Apps to view in Istio
     
@@ -546,11 +636,11 @@
     #Try the follwoing URL in the Browser or do a cUrl
     curl -k https://ratings-<appgw-dns-name>/
     ```
-  
+
   - #### Traffic Shifting
-  
+
     ![service-mirros](./Assets/istio-trafficplit.png)
-  
+
     ```bash
     #Traffic Shifting
     kubectl apply -f $istioPath/Examples/HelloWorld/helloworld-app.yaml -n primary --context=$CTX_CLUSTER1
@@ -575,11 +665,11 @@
     
     #Check Routing behaviour again
     ```
-  
+
   - #### Blue/Green
-  
+
     ![service-mirros](./Assets/istio-trafficplit-bluegreen.png)
-  
+
     ```bash
     #Blue/Green
     #Deploy PodInfo Blue
@@ -604,11 +694,11 @@
     
     #Check Routing behaviour again
     ```
-  
+
   - #### Fault Injection
-  
+
     ![service-mirros](./Assets/istio-trafficplit-faultinjection.png)
-  
+
     ```bash
     #Fault Injection
     #Deploy Fault in Ratinsg API
@@ -624,9 +714,9 @@
     #Check Comments in the file
     #Check Routing behaviour
     ```
-  
+
   - #### Circuit Breaker
-  
+
     ```bash
     #Circuit Breaker
     #Deploy HttpBin App
@@ -654,17 +744,17 @@
     #Change parameters in the $istioPath/Examples/Networking/httpbin-destination-rule.yaml file
     #Play around and see the chnage in the behaviour
     ```
-  
+
   - #### Service Mirroring or Shadowing
-  
+
     ![service-mirros](./Assets/istio-mirroring.png)
-  
+
     
-  
+
     ![k8s-mirroring-cross](./Assets/k8s-mirroring-cross.png)
-  
+
     
-  
+
     ```bash
     #Service Mirroring or Shadowing
     #Create Secondary Cluster - CLI or Portal
@@ -750,9 +840,9 @@
     #Observe that all calls being replicated to helloworld-v2 of secondary cluster
     
     ```
-  
+
   - #### Cleanup
-  
+
     ```bash
     #Cleanup
     
@@ -764,7 +854,7 @@
     istioctl x uninstall --set profile=default --purge --context=$CTX_CLUSTER2
     kubectl delete namespace istio-system --context=$CTX_CLUSTER2
     ```
-  
+
     
 
 ## References
@@ -785,3 +875,4 @@
 - [Security and Kernel Updates](https://docs.microsoft.com/en-us/azure/aks/node-updates-kured)
 - [Patching](https://docs.microsoft.com/en-us/azure/architecture/operator-guides/aks/aks-upgrade-practices)
 - [AKS Best Practices](https://docs.microsoft.com/en-us/azure/aks/best-practices?toc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Farchitecture%2Ftoc.json&bc=https%3A%2F%2Fdocs.microsoft.com%2Fen-us%2Fazure%2Farchitecture%2Fbread%2Ftoc.json)
+
