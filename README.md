@@ -69,7 +69,7 @@
 
 ## Target Reference Architecture
 
-![AKS-Ref-Achitecture-v2.2](./Assets/AKS-Ref-Achitecture-v2.2.png)
+![AKS-Ref-Achitecture-v2.2](./Assets/AKS-Ref-Achitecture-v2.3.png)
 
 
 
