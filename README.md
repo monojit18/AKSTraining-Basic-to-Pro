@@ -620,7 +620,7 @@
 
     - ###### Configure **Multi-site Listener**
 
-      - Users can reach to *Application Gateway* and ultimately to the AKS cluster in different ways
+      - InBound calls can reach to *Application Gateway* and ultimately to the AKS cluster in different ways
         - **dev** - for connecting to the *DEV* environment of the AKS cluster
         - **qa** - for connecting to the *QA* environment of the AKS cluster
 
@@ -699,7 +699,7 @@
 
       ```bash
       #SSL Offloading at Application Gateway
-      #Current implementation DEV is already setup for this
+      #Current setup for DEV as described above is already setup for this
       
       #PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
       #Http Settings for aks-train-appgw-dev-http-settings - is setup over Http (80)
@@ -738,7 +738,8 @@
       
       ```bash
       #SSL Offloading at Nginx Ingress Controller
-      #Current implementation QA is already setup for this
+      #Current setup for QA as described above is already setup for this
+      
       #PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
       #Http Settings for aks-train-appgw-qa-http-settings - is setup over Https (443)
       #Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Https (443)
