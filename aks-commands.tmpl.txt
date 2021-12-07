@@ -450,7 +450,7 @@ helm install ratingsdb bitnami/mongodb -n db \
 #Clone/Fork/Download Souerce code
 https://github.com/monojit18/mslearn-aks-workshop-ratings-api.git
 
-#CD to the director where Dockerfile exists
+#CD to the directory where Dockerfile exists
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/ratings-api:v1.0.0 -r $acrName .
 
@@ -468,7 +468,7 @@ helm install ratingsapi-chart -n aks-train-dev $microservicesFolderPath/Helms/ra
 #Clone/Fork/Download Souerce code
 https://github.com/monojit18/mslearn-aks-workshop-ratings-web.git
 
-#CD to the director where Dockerfile exists
+#CD to the directory where Dockerfile exists
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/ratings-web:v1.0.0 -r $acrName .
 
@@ -540,22 +540,17 @@ SSL Options
 ================================================================================
 
 #SSL Offloading at Application Gateway
-#Current implementation DEV is already setup for this
+#Current setup for DEV as described above is already setup for this
 
 #PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
 #Http Settings for aks-train-appgw-dev-http-settings - is setup over Http (80)
 #Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Http (80)
 
-kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="" --key=""
-helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
-
-#helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
-#helm uninstall ingress-chart -n aks-train-ssltest
-
-#helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
-
-#helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
-#helm uninstall ingress-chart -n aks-train-ssltest
+#SSL Offloading at Nginx Ingress Controller
+#Current setup for QA as described above is already setup for this
+#PFX Certtificate is uploaded at Application Gateway for the Listener - aks-train-appgw-dev-listener
+#Http Settings for aks-train-appgw-qa-http-settings - is setup over Https (443)
+#Traffic from Application Gateway to Nginx Ingress Controller of AKS cluster is over Https (443)
 
 ================================================================================
 
@@ -935,6 +930,66 @@ az account show
 #Set appropriate Subscription, if needed
 #az account set -s $subscriptionId
 
+SSL Offload at the Application Pod
+================================================================================
+#Configure App Gateway Listeners for ssltest
+#Configure App Gateway Http Settings for ssltest
+#Configure App Gateway Rules for ssltest
+#Configure App Gateway Health Probe for ssltest
+
+#Create namespace for SSL Test
+kubectl create ns aks-train-ssltest
+
+APIProxyApp
+========================================
+
+#APIProxyApp - Proxy API App
+
+#Clone/Fork/Download Souerce code
+https://github.com/monojit18/SSLTest.git
+
+#CD to the APIProxyApp directory where Dockerfile exists
+#This docker build but performed in a Cloud Agent(VM) by ACR
+az acr build -t apiproxyapp:v1.0.0 -r $acrName .
+
+#Change <acrName> in the $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+#Change <agentpool> in the $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+helm install apiproxy-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apiproxy-chart/ -f $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+
+#helm upgrade apiproxy-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apiproxy-chart/ -f $microservicesFolderPath/Helms/apiproxy-chart/values-ssl.yaml
+#helm uninstall apiproxy-chart -n aks-train-ssltest
+
+APIBackendApp
+========================================
+
+#APIBackendApp - backend API App
+
+#CD to the APIBackendApp directory where Dockerfile exists
+#This docker build but performed in a Cloud Agent(VM) by ACR
+az acr build -t apibkendapp:v1.0.0 -r $acrName .
+
+#Change <acrName> in the $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+#Change <agentpool> in the $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+helm install apibkend-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apibkend-chart/ -f $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+
+#helm upgrade apibkend-chart -n aks-train-ssltest $microservicesFolderPath/Helms/apibkend-chart/ -f $microservicesFolderPath/Helms/apibkend-chart/values-ssl.yaml
+#helm uninstall apibkend-chart -n aks-train-ssltest
+
+#Backend protocol - HTTPS
+kubectl create secret tls aks-workshop-tls-secret -n aks-train-ssltest --cert="$baseFolderPath/Certs/star_internal_wkshpdev_com.pem" --key="$baseFolderPath/Certs/<>.key"
+helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
+
+#helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-backend.yaml
+#helm uninstall ingress-chart -n aks-train-ssltest
+
+#SSL Passthru
+#helm install ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
+
+#helm upgrade ingress-chart -n aks-train-ssltest $setupFolderPath/Helms/ingress-chart/ -f $setupFolderPath/Helms/ingress-chart/values-e2essl-passthru.yaml
+#helm uninstall ingress-chart -n aks-train-ssltest
+
+================================================================================
+
 API Management
 ================================================================================
 [diagram - AKS+APIM]
@@ -1010,7 +1065,7 @@ ACIBlobApp
 #Clone/Fork/Download Souerce code
 https://github.com/monojit18/ACIBlobApp.git
 
-#CD to the director where Dockerfile exists
+#CD to the directory where Dockerfile exists
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/aciblob-app:v1.0.0 -r $acrName .
 
@@ -1043,7 +1098,7 @@ ACIQueueApp
 #Clone/Fork/Download Souerce code
 https://github.com/monojit18/ACIQueueApp.git
 
-#CD to the director where Dockerfile exists
+#CD to the directory where Dockerfile exists
 #This docker build but performed in a Cloud Agent(VM) by ACR
 az acr build -t $acrName.azurecr.io/aciqueue-app:v1.0.0 -r $acrName .
 
