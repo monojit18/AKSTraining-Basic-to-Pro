@@ -1,9 +1,10 @@
 !.gitignore
+**/.DS_Store
 aks-commands.txt
 **/Certs
 **/.vscode
 **/.env
-**/SSLtest/**/Misc
+**/Misc
 **/Source/logs
 **/Source/Certs
 **/Source/Certs/**
